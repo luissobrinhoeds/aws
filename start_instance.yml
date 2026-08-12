@@ -1,0 +1,36 @@
+---
+- name: Iniciar instancia EC2
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    aws_region: "us-east-1"
+    ec2_instance_id: "i-056080d28ad720d8e"
+
+  tasks:
+
+    - name: Validar parametros obrigatorios
+      ansible.builtin.assert:
+        that:
+          - region is defined
+          - region | length > 0
+          - instance_id is defined
+          - instance_id | length > 0
+        fail_msg: "Informe os parametros 'region' e 'instance_id'."
+
+    - name: Iniciar instancia EC2
+      amazon.aws.ec2_instance:
+        region: "{{ aws_region }}"
+        instance_ids:
+          - "{{ ec2_instance_id }}"
+        state: running
+        wait: true
+      register: ec2_result
+
+    - name: Exibir resultado
+      ansible.builtin.debug:
+        msg:
+          instance_id: "{{ ec2_instance_id }}"
+          region: "{{ aws_region }}"
+          state: "{{ ec2_result.instances[0].state.name | default('unknown') }}"
