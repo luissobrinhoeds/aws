@@ -1,0 +1,51 @@
+---
+- name: Criar instancia EC2
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    aws_region: "{{ region }}"
+    ec2_instance_name: "{{ name }}"
+    ec2_instance_type: "{{ type }}"
+    ec2_ami: "{{ ami }}"
+    ec2_subnet: "{{ subnet }}"
+    ec2_security_group: "{{ security_group }}"
+    ec2_key_pair: "{{ key_pair }}"
+
+  tasks:
+
+    - name: Validar parametros obrigatorios
+      ansible.builtin.assert:
+        that:
+          - region is defined
+          - name is defined
+          - type is defined
+          - ami is defined
+          - subnet is defined
+          - security_group is defined
+          - key_pair is defined
+        fail_msg: "Informe todos os parametros obrigatorios."
+
+    - name: Criar instancia EC2
+      amazon.aws.ec2_instance:
+        name: "{{ ec2_instance_name }}"
+        region: "{{ aws_region }}"
+        instance_type: "{{ ec2_instance_type }}"
+        image_id: "{{ ec2_ami }}"
+        subnet_id: "{{ ec2_subnet }}"
+        security_group: "{{ ec2_security_group }}"
+        key_name: "{{ ec2_key_pair }}"
+        state: running
+        wait: true
+      register: ec2_result
+
+    - name: Exibir resultado
+      ansible.builtin.debug:
+        msg:
+          instance_id: "{{ ec2_result.instances[0].instance_id }}"
+          name: "{{ ec2_instance_name }}"
+          region: "{{ aws_region }}"
+          state: "{{ ec2_result.instances[0].state.name }}"
+          private_ip: "{{ ec2_result.instances[0].private_ip_address | default('N/A') }}"
+          public_ip: "{{ ec2_result.instances[0].public_ip_address | default('N/A') }}"
