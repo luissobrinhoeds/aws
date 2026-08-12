@@ -26,6 +26,12 @@
           - "{{ ec2_instance_id }}"
         state: stopped
         wait: true
+
+    - name: Lista novamente o estado da instancia
+      amazon.aws.ec2_instance_info:
+        region: "{{ aws_region }}"
+        instance_ids:
+          - "{{ ec2_instance_id }}"
       register: ec2_result
 
     - name: Exibir resultado
