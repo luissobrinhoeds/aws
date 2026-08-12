@@ -19,13 +19,32 @@
       ansible.builtin.assert:
         that:
           - region is defined
+          - region | length > 0
           - name is defined
+          - name | length > 0
           - type is defined
           - ami is defined
           - subnet is defined
           - security_group is defined
           - key_pair is defined
         fail_msg: "Informe todos os parametros obrigatorios."
+
+    - name: Verificar se instancia ja existe
+      amazon.aws.ec2_instance_info:
+        region: "{{ aws_region }}"
+        filters:
+          "tag:Name": "{{ ec2_instance_name }}"
+      register: existing_instances
+
+    - name: Impedir criacao de instancia duplicada
+      ansible.builtin.assert:
+        that:
+          - existing_instances.instances | length == 0
+        fail_msg: >-
+          Ja existe uma instancia com o nome
+          '{{ ec2_instance_name }}' na regiao
+          '{{ aws_region }}'.
+          A criacao foi cancelada.
 
     - name: Criar instancia EC2
       amazon.aws.ec2_instance:
