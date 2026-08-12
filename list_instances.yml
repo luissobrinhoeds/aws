@@ -1,0 +1,29 @@
+---
+- name: Listar instancias EC2
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    aws_region: "sa-east-1"
+
+  tasks:
+
+    - name: Buscar todas as instancias EC2
+      amazon.aws.ec2_instance_info:
+        region: "{{ aws_region }}"
+      register: ec2_instances
+
+    - name: Exibir instancias
+      ansible.builtin.debug:
+        msg:
+          - "Instance ID: {{ item.instance_id }}"
+          - "Name: {{ item.tags.Name | default('Sem nome') }}"
+          - "State: {{ item.state.name }}"
+          - "Type: {{ item.instance_type }}"
+          - "Private IP: {{ item.private_ip_address | default('N/A') }}"
+          - "Public IP: {{ item.public_ip_address | default('N/A') }}"
+          - "Availability Zone: {{ item.placement.availability_zone }}"
+      loop: "{{ ec2_instances.instances }}"
+      loop_control:
+        label: "{{ item.instance_id }}"
